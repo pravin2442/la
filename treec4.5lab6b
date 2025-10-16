@@ -1,0 +1,54 @@
+
+C4.5 using PlayTennis Dataset
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, export_text
+from sklearn.metrics import accuracy_score, classification_report
+
+data = {
+    'Outlook': ['Sunny', 'Sunny', 'Overcast', 'Rain', 'Rain', 'Rain', 'Overcast',
+                'Sunny', 'Sunny', 'Rain', 'Sunny', 'Overcast', 'Overcast', 'Rain'],
+    'Temperature': ['Hot', 'Hot', 'Hot', 'Mild', 'Cool', 'Cool', 'Cool',
+                    'Mild', 'Cool', 'Mild', 'Mild', 'Mild', 'Hot', 'Mild'],
+    'Humidity': ['High', 'High', 'High', 'High', 'Normal', 'Normal', 'Normal',
+                 'High', 'Normal', 'Normal', 'Normal', 'High', 'Normal', 'High'],
+    'Wind': ['Weak', 'Strong', 'Weak', 'Weak', 'Weak', 'Strong', 'Strong',
+             'Weak', 'Weak', 'Weak', 'Strong', 'Strong', 'Weak', 'Strong'],
+    'PlayTennis': ['No', 'No', 'Yes', 'Yes', 'Yes', 'No', 'Yes',
+                   'No', 'Yes', 'Yes', 'Yes', 'Yes', 'Yes', 'No']
+}
+
+df = pd.DataFrame(data)
+df_encoded = pd.get_dummies(df[['Outlook', 'Temperature', 'Humidity', 'Wind']])
+y = df['PlayTennis'].map({'No': 0, 'Yes': 1})
+X_train, X_test, y_train, y_test = train_test_split(df_encoded, y, test_size=0.3, random_state=42)
+model = DecisionTreeClassifier(criterion='entropy', random_state=42)
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+tree_rules = export_text(model, feature_names=list(X_train.columns))
+print("\nDecision Tree Rules:\n", tree_rules)
+
+C4.5 using Iris Dataset
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, export_text
+
+iris = load_iris()
+X = iris.data
+y = iris.target
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+clf = DecisionTreeClassifier(criterion='entropy', random_state=42)
+clf.fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+accuracy = clf.score(X_test, y_test)
+print(f"Accuracy: {accuracy:.2f}")
+tree_rules = export_text(clf, feature_names=iris.feature_names)
+print("\nDecision Tree Rules:\n")
+print(tree_rules)
+print("\nPredictions:", y_pred)
+print("Actual: ", y_test)
+

@@ -1,0 +1,60 @@
+# Import required libraries
+from sklearn.datasets import load_breast_cancer
+import matplotlib.pyplot as plt
+from sklearn.inspection import DecisionBoundaryDisplay
+from sklearn.svm import SVC
+import numpy as np
+
+# Step 1: Load the Breast Cancer dataset
+cancer = load_breast_cancer()
+
+# Step 2: Use only first two features for 2D visualization
+X = cancer.data[:, :2]  # mean radius, mean texture
+y = cancer.target        # 0 = malignant, 1 = benign
+
+# Step 3: Create and train the linear SVM model
+svm = SVC(kernel="linear", C=1)
+svm.fit(X, y)
+
+# Step 4: Take user input for prediction
+val1 = float(input(f"Enter value for {cancer.feature_names[0]}: "))
+val2 = float(input(f"Enter value for {cancer.feature_names[1]}: "))
+
+# Prepare input as a 2D array
+user_X = np.array([[val1, val2]])
+
+# Step 5: Predict class (0 = malignant, 1 = benign)
+pred = svm.predict(user_X)[0]
+
+# Step 6: Display prediction result
+if pred == 0:
+    print("\nThe model predicts: Malignant (cancerous tumor)")
+else:
+    print("\nThe model predicts: Benign (non-cancerous tumor)")
+
+# Step 7: Visualize decision boundary
+DecisionBoundaryDisplay.from_estimator(
+    svm,
+    X,
+    response_method="predict",
+    alpha=0.8,
+    cmap="Pastel1",
+    xlabel=cancer.feature_names[0],
+    ylabel=cancer.feature_names[1],
+)
+
+# Step 8: Plot the training data
+plt.scatter(X[:, 0], X[:, 1],
+            c=y, s=20, edgecolors="k",
+            label="Training data")
+
+# Step 9: Plot the user input as a star
+plt.scatter(user_X[0, 0], user_X[0, 1],
+            c="red" if pred == 0 else "green",
+            marker="*", s=200, edgecolors="k",
+            label="User input")
+
+# Step 10: Add legend and show the plot
+plt.legend()
+plt.title("Linear SVM Decision Boundary - Breast Cancer Classification")
+plt.show()

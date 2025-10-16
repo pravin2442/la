@@ -1,0 +1,226 @@
+
+# MLP from scratch using NumPy (no libraries for ML):
+import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+def softmax(x):
+    exp_vals = np.exp(x - np.max(x, axis=1, keepdims=True))
+    return exp_vals / np.sum(exp_vals, axis=1, keepdims=True)
+
+class MLPClassifier:
+    def __init__(self, input_size, hidden_size, output_size, learning_rate=0.1):
+        self.lr = learning_rate
+        self.W1 = np.random.randn(input_size, hidden_size) * 0.01
+        self.b1 = np.zeros((1, hidden_size))
+        self.W2 = np.random.randn(hidden_size, output_size) * 0.01
+        self.b2 = np.zeros((1, output_size))
+    def forward(self, X):
+        self.z1 = np.dot(X, self.W1) + self.b1
+        self.a1 = sigmoid(self.z1)
+        self.z2 = np.dot(self.a1, self.W2) + self.b2
+        self.a2 = softmax(self.z2)
+        return self.a2
+    def backward(self, X, y, output):
+        m = X.shape[0]
+        d_output = (output - y) / m
+        d_hidden = np.dot(d_output, self.W2.T) * sigmoid_derivative(self.a1)
+        self.W2 -= self.lr * np.dot(self.a1.T, d_output)
+        self.b2 -= self.lr * np.sum(d_output, axis=0, keepdims=True)
+        self.W1 -= self.lr * np.dot(X.T, d_hidden)
+        self.b1 -= np.sum(d_hidden, axis=0, keepdims=True)
+    def train(self, X, y, epochs=1000):
+        for epoch in range(epochs):
+            output = self.forward(X)
+            self.backward(X, y, output)
+            if epoch % 100 == 0:
+                loss = -np.mean(np.sum(y * np.log(output + 1e-9), axis=1))
+                print(f"Epoch {epoch}, Loss: {loss:.6f}")
+    def predict(self, X):
+        probs = self.forward(X)
+        return np.argmax(probs, axis=1)
+
+iris = load_iris()
+X = iris.data
+y = iris.target.reshape(-1,1)
+class_names = iris.target_names
+
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+encoder = OneHotEncoder(sparse_output=False)
+y_encoded = encoder.fit_transform(y)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
+
+mlp = MLPClassifier(input_size=4, hidden_size=8, output_size=3, learning_rate=0.1)
+mlp.train(X_train, y_train, epochs=1000)
+
+y_pred = mlp.predict(X_test)
+y_true = np.argmax(y_test, axis=1)
+accuracy = np.mean(y_pred == y_true)
+print("\nTest Accuracy:", accuracy)
+print("True Labels:", y_true)
+print("Predicted Labels:", y_pred)
+
+sepal_length = float(input("Sepal Length (cm): "))
+sepal_width = float(input("Sepal Width (cm): "))
+petal_length = float(input("Petal Length (cm): "))
+petal_width = float(input("Petal Width (cm): "))
+user_input = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+user_input_scaled = scaler.transform(user_input)
+user_pred = mlp.predict(user_input_scaled)[0]
+print("\nPredicted Class Label:", user_pred)
+print("Predicted Class Name:", class_names[user_pred])
+
+# Using Scikit-learn MLP:
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score
+
+iris = load_iris()
+X, y = iris.data, iris.target
+class_names = iris.target_names
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+mlp = MLPClassifier(hidden_layer_sizes=(8,8), activation='relu', solver='adam', max_iter=1000, random_state=42)
+mlp.fit(X_train, y_train)
+y_pred = mlp.predict(X_test)
+print("Test Accuracy:", accuracy_score(y_test, y_pred))
+
+sepal_length = float(input("Sepal Length (cm): "))
+sepal_width = float(input("Sepal Width (cm): "))
+petal_length = float(input("Petal Length (cm): "))
+petal_width = float(input("Petal Width (cm): "))
+user_data = [[sepal_length, sepal_width, petal_length, petal_width]]
+user_data_scaled = scaler.transform(user_data)
+predicted_class = mlp.predict(user_data_scaled)[0]
+print("\nPredicted Class Label:", predicted_class)
+print("Predicted Class Name:", class_names[predicted_class])
+
+# 2b) Using TensorFlow (Keras):
+
+import tensorflow as tf
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+import numpy as np
+
+iris = load_iris()
+X, y = iris.data, iris.target.reshape(-1,1)
+class_names = iris.target_names
+
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+encoder = OneHotEncoder(sparse_output=False)
+y = encoder.fit_transform(y)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(8, activation='relu', input_shape=(4,)),
+    tf.keras.layers.Dense(8, activation='relu'),
+    tf.keras.layers.Dense(3, activation='softmax')
+])
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.fit(X_train, y_train, epochs=100, verbose=0)
+loss, acc = model.evaluate(X_test, y_test, verbose=0)
+print("Test Accuracy:", acc)
+
+sepal_length = float(input("Sepal Length (cm): "))
+sepal_width = float(input("Sepal Width (cm): "))
+petal_length = float(input("Petal Length (cm): "))
+petal_width = float(input("Petal Width (cm): "))
+user_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+user_data_scaled = scaler.transform(user_data)
+user_pred = np.argmax(model.predict(user_data_scaled), axis=1)[0]
+print("\nPredicted Class Label:", user_pred)
+print("Predicted Class Name:", class_names[user_pred])
+
+# 2c) Using PyTorch:
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+import numpy as np
+
+iris = load_iris()
+X, y = iris.data, iris.target.reshape(-1,1)
+class_names = iris.target_names
+
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+encoder = OneHotEncoder(sparse_output=False)
+y = encoder.fit_transform(y)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train = torch.tensor(X_train, dtype=torch.float32)
+y_train = torch.tensor(y_train, dtype=torch.float32)
+X_test = torch.tensor(X_test, dtype=torch.float32)
+y_test = torch.tensor(y_test, dtype=torch.float32)
+
+class MLP(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(MLP, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.fc3 = nn.Linear(hidden_size, output_size)
+        self.softmax = nn.Softmax(dim=1)
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.softmax(self.fc3(x))
+        return x
+
+model = MLP(4,8,3)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+for epoch in range(200):
+    optimizer.zero_grad()
+    outputs = model(X_train)
+    loss = criterion(outputs, torch.max(y_train, 1)[1])
+    loss.backward()
+    optimizer.step()
+    if epoch % 50 == 0:
+        print(f"Epoch {epoch}, Loss: {loss.item():.4f}")
+
+with torch.no_grad():
+    outputs = model(X_test)
+    _, predicted = torch.max(outputs, 1)
+    _, true_labels = torch.max(y_test, 1)
+    accuracy = (predicted == true_labels).float().mean()
+    print("Test Accuracy:", accuracy.item())
+
+sepal_length = float(input("Sepal Length (cm): "))
+sepal_width = float(input("Sepal Width (cm): "))
+petal_length = float(input("Petal Length (cm): "))
+petal_width = float(input("Petal Width (cm): "))
+user_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+user_data_scaled = scaler.transform(user_data)
+user_tensor = torch.tensor(user_data_scaled, dtype=torch.float32)
+
+with torch.no_grad():
+    user_output = model(user_tensor)
+    predicted_class = torch.argmax(user_output, dim=1).item()
+print("\nPredicted Class Label:", predicted_class)
+print("Predicted Class Name:", class_names[predicted_class])

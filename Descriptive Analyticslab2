@@ -1,0 +1,132 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+df = pd.read_csv('Titanic.csv')
+print(df.head())
+print(df.info())
+print(df.describe())
+
+df = df.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1)
+df['Age'].fillna(df['Age'].median(), inplace=True)
+df['Embarked'].fillna(df['Embarked'].mode()[0], inplace=True)
+
+print(df['Age'].mean())
+print(df['Age'].median())
+print(df['Age'].mode()[0])
+
+print(df['Sex'].value_counts())
+print(df['Pclass'].value_counts())
+print(df['Embarked'].value_counts())
+print(df['Survived'].value_counts())
+
+print(df.groupby('Sex')['Survived'].mean())
+print(df.groupby('Pclass')['Survived'].mean())
+print(df.groupby('Embarked')['Survived'].mean())
+
+sns.histplot(df['Age'], kde=True)
+plt.title('Age Distribution')
+plt.show()
+
+sns.countplot(x='Sex', data=df)
+plt.title('Count by Gender')
+plt.show()
+
+sns.barplot(x='Sex', y='Survived', data=df)
+plt.title('Survival Rate by Gender')
+plt.show()
+
+sns.barplot(x='Pclass', y='Survived', data=df)
+plt.title('Survival by Class')
+plt.show()
+
+sns.boxplot(x='Survived', y='Age', data=df)
+plt.title('Age vs Survival')
+plt.show()
+
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+plt.show()
+
+df['FamilySize'] = df['SibSp'] + df['Parch'] + 1
+print(df.groupby('FamilySize')['Survived'].mean())
+
+sns.violinplot(x='Survived', y='FamilySize', data=df)
+plt.title('Survival by Family Size')
+plt.show()
+
+sns.barplot(x='Pclass', y='Survived', hue='Sex', data=df)
+plt.title('Survival across Class and Gender')
+plt.show()
+
+# ...............................................................................
+# Customer Segmentation Using Descriptive Analytics
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+data = pd.read_excel('Online Retail.xlsx')
+data = data.dropna(subset=['CustomerID'])
+data = data[(data['Quantity'] > 0) & (data['UnitPrice'] > 0)]
+
+print(data['Quantity'].mean())
+print(data['Quantity'].median())
+print(data['Quantity'].mode()[0])
+print(data['Quantity'].std())
+print(data['UnitPrice'].mean())
+print(data['UnitPrice'].median())
+print(data['UnitPrice'].mode()[0])
+print(data['UnitPrice'].std())
+
+data['TotalSales'] = data['Quantity'] * data['UnitPrice']
+customer_sales = data.groupby('CustomerID')['TotalSales'].sum().reset_index()
+print(customer_sales.head())
+
+sns.histplot(data['Quantity'], kde=True)
+plt.title('Quantity Distribution')
+plt.show()
+
+sns.boxplot(data['Quantity'])
+plt.title('Quantity Boxplot')
+plt.show()
+
+sns.kdeplot(data['UnitPrice'])
+plt.title('UnitPrice KDE')
+plt.show()
+
+sns.histplot(data['TotalSales'], kde=True)
+plt.title('Total Sales Distribution')
+plt.show()
+
+country_sales = data.groupby('Country')['TotalSales'].sum().reset_index()
+top_products = data.groupby('StockCode')['TotalSales'].sum().reset_index().sort_values(by='TotalSales', ascending=False)
+print(top_products.head(10))
+
+top_customers = customer_sales.sort_values(by='TotalSales', ascending=False).head(10)
+sns.barplot(x='CustomerID', y='TotalSales', data=top_customers)
+plt.title('Top 10 Customers by Total Spend')
+plt.xticks(rotation=45)
+plt.show()
+
+plt.pie(country_sales['TotalSales'], labels=country_sales['Country'], autopct='%1.1f%%')
+plt.title('Country-wise Sales Distribution')
+plt.show()
+
+data['InvoiceDate'] = pd.to_datetime(data['InvoiceDate'])
+data['Month'] = data['InvoiceDate'].dt.to_period('M')
+monthly_sales = data.groupby('Month')['TotalSales'].sum().reset_index()
+plt.plot(monthly_sales['Month'].astype(str), monthly_sales['TotalSales'])
+plt.title('Monthly Sales Trend')
+plt.xticks(rotation=90)
+plt.show()
+
+high_value = customer_sales[customer_sales['TotalSales'] > customer_sales['TotalSales'].mean()]
+print('High Value Customers:', len(high_value))
+
+peak_month = monthly_sales.loc[monthly_sales['TotalSales'].idxmax()]
+print('Peak Purchasing Period:', peak_month)
+
+underperforming = top_products.tail(10)
+print('Underperforming Products:')
+print(underperforming)

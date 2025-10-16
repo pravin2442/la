@@ -1,0 +1,122 @@
+# Lab Exercise 4: FIND-S Algorithm Implementation
+# ----------------------------------------------------------
+
+# Step 1: Define the training dataset
+# Each row = [Sky, AirTemp, Humidity, Wind, Water, Forecast, EnjoySport]
+data = [
+    ['Sunny', 'Warm', 'Normal', 'Strong', 'Warm', 'Same', 'Yes'],
+    ['Sunny', 'Warm', 'High',   'Strong', 'Warm', 'Same', 'Yes'],
+    ['Rainy', 'Cold', 'High',   'Strong', 'Warm', 'Change', 'No'],
+    ['Sunny', 'Warm', 'High',   'Strong', 'Cool', 'Change', 'Yes']
+]
+
+# Step 2: Initialize hypothesis with the most specific (ϕ)
+hypothesis = ['ϕ'] * (len(data[0]) - 1)   # 6 attributes
+print("Initial Hypothesis:", hypothesis)
+
+# Step 3: Find the first positive example and initialize hypothesis
+for example in data:
+    if example[-1] == 'Yes':          # check if class label = positive
+        hypothesis = example[:-1]     # copy all attribute values except the label
+        break                         # initialize once, then stop
+
+print("\nAfter first positive example:\n", hypothesis)
+
+# Step 4: Compare with remaining positive examples and generalize if needed
+for example in data:
+    if example[-1] == 'Yes':          # process only positive examples
+        for i in range(len(hypothesis)):
+            if hypothesis[i] != example[i]:
+                hypothesis[i] = '?'   # generalize when mismatch found
+
+# Step 5: Display the final hypothesis
+print("\nFinal Hypothesis:", hypothesis)
+
+
+
+
+# ............................................................................................
+
+# Candidate Elimination Algorithm suitable for your lab submission:
+
+def consistent(hypothesis, example):
+    for h, e in zip(hypothesis, example):
+        if h != '?' and h != 'ϕ' and h != e:
+            return False
+    return True
+
+def more_general(h1, h2):
+    strictly_more_general = False
+    for x, y in zip(h1, h2):
+        if x == '?':
+            if y != '?':
+                strictly_more_general = True
+        elif x == 'ϕ':
+            return False
+        elif x != y:
+            return False
+    return strictly_more_general
+
+def more_specific(h1, h2):
+    strictly_more_specific = False
+    for x, y in zip(h1, h2):
+        if x == 'ϕ':
+            return False
+        if y == '?':
+            if x != '?':
+                strictly_more_specific = True
+        elif x != y:
+            return False
+    return strictly_more_specific
+
+def candidate_elimination(training_data):
+    num_attributes = len(training_data[0]) - 1
+    S = [['ϕ'] * num_attributes]
+    G = [['?'] * num_attributes]
+    domains = [set(row[i] for row in training_data) for i in range(num_attributes)]
+    for example in training_data:
+        attributes, label = example[:-1], example[-1]
+        if label == 'Yes':
+            G = [g for g in G if consistent(g, attributes)]
+            newS = []
+            for s in S:
+                if consistent(s, attributes):
+                    newS.append(s)
+                else:
+                    s2 = s.copy()
+                    for i in range(num_attributes):
+                        if s2[i] == 'ϕ':
+                            s2[i] = attributes[i]
+                        elif s2[i] != attributes[i]:
+                            s2[i] = '?'
+                    newS.append(s2)
+            S = [s for s in newS]
+            S = [s for s in S if not any((s != t) and more_general(s, t) for t in S)]
+        else:
+            S = [s for s in S if not consistent(s, attributes)]
+            newG = []
+            for g in G:
+                if not consistent(g, attributes):
+                    newG.append(g)
+                else:
+                    for i in range(num_attributes):
+                        if g[i] == '?':
+                            for val in domains[i]:
+                                if val != attributes[i]:
+                                    new_hypo = g.copy()
+                                    new_hypo[i] = val
+                                    newG.append(new_hypo)
+            G = newG
+            G = [g for g in G if not any((g != h) and more_specific(g, h) for h in G)]
+    return S, G
+
+training_data = [
+    ['Sunny', 'Warm', 'Normal', 'Strong', 'Warm', 'Same', 'Yes'],
+    ['Sunny', 'Warm', 'High', 'Strong', 'Warm', 'Same', 'Yes'],
+    ['Rainy', 'Cold', 'High', 'Strong', 'Warm', 'Change', 'No'],
+    ['Sunny', 'Warm', 'High', 'Strong', 'Cool', 'Change', 'Yes']
+]
+
+S_final, G_final = candidate_elimination(training_data)
+print("Final Specific Hypothesis S:", S_final)
+print("Final General Hypothesis G:", G_final)

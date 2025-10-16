@@ -1,0 +1,53 @@
+# Import required libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report
+
+# Step 1: Create a simple dataset
+data = {
+    'Hours_Studied': [1, 2, 2.5, 3, 3.5, 4, 5, 6, 6.5, 7, 8, 9],
+    'Passed': [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
+}
+df = pd.DataFrame(data)
+
+# Step 2: Separate features (X) and target (y)
+X = df[['Hours_Studied']]  # independent variable
+y = df['Passed']            # dependent variable
+
+# Step 3: Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+# Step 4: Create and train the Logistic Regression model
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Step 5: Make predictions
+y_pred = model.predict(X_test)
+
+# Step 6: Evaluate model performance
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+# Step 7: Predict for a new student
+hours = 4.5
+prob = model.predict_proba([[hours]])[0][1]
+prediction = model.predict([[hours]])[0]
+print(f"\nPredicted probability of passing if studied {hours} hours: {prob:.2f}")
+print("Prediction:", "Pass" if prediction == 1 else "Fail")
+
+# Step 8: Visualization (Logistic Curve)
+X_plot = np.linspace(0, 10, 100).reshape(-1, 1)
+y_probs = model.predict_proba(X_plot)[:, 1]
+
+plt.figure(figsize=(8, 5))
+plt.scatter(X, y, color='blue', label='Actual Data')
+plt.plot(X_plot, y_probs, color='red', linewidth=2, label='Logistic Curve')
+plt.xlabel('Hours Studied')
+plt.ylabel('Probability of Passing')
+plt.title('Logistic Regression: Hours Studied vs Probability of Passing')
+plt.legend()
+plt.grid(True)
+plt.show()

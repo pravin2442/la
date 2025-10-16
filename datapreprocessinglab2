@@ -1,0 +1,40 @@
+Data Pre-processing Techniques, exactly matching your given explanation and flow:
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from scipy.stats import zscore
+from sklearn.feature_selection import VarianceThreshold
+
+data = {
+    'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
+    'Age': [25, np.nan, 35, 45, 29],
+    'Gender': ['F', 'M', 'M', np.nan, 'F'],
+    'Income': [50000, 60000, 80000, 120000, np.nan],
+    'Loan_Status': ['Y', 'N', 'Y', 'N', 'Y']
+}
+df = pd.DataFrame(data)
+print(df)
+
+print(df.isnull().sum())
+
+df['Age'].fillna(df['Age'].mean(), inplace=True)
+df['Gender'].fillna(df['Gender'].mode()[0], inplace=True)
+df['Income'].fillna(df['Income'].median(), inplace=True)
+
+le = LabelEncoder()
+df['Gender'] = le.fit_transform(df['Gender'])
+df['Loan_Status'] = le.fit_transform(df['Loan_Status'])
+
+scaler = StandardScaler()
+df[['Age', 'Income']] = scaler.fit_transform(df[['Age', 'Income']])
+
+z_scores = zscore(df[['Age', 'Income']])
+outliers = (np.abs(z_scores) > 3).any(axis=1)
+print("Outliers:\n", df[outliers])
+
+df['Income'] = np.where(df['Income'] > 2.5, 2.5, df['Income'])
+
+selector = VarianceThreshold(threshold=0.1)
+features = selector.fit_transform(df[['Age', 'Income', 'Gender']])
+
+print(df)

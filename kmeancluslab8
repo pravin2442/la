@@ -1,0 +1,33 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+X = np.array([[1, 4],
+              [1, 3],
+              [0, 4],
+              [5, 1],
+              [6, 2],
+              [4, 0]])
+
+centroids = np.array([[1, 3], [5, 1]])
+
+for i in range(5):
+    distances = np.array([[np.linalg.norm(x - c) for c in centroids] for x in X])
+    clusters = np.argmin(distances, axis=1)
+    new_centroids = np.array([X[clusters == k].mean(axis=0) for k in range(2)])
+    if np.all(centroids == new_centroids):
+        break
+    centroids = new_centroids
+
+print("Final centroids:\n", centroids)
+print("Cluster assignment:", clusters)
+
+colors = ['red', 'blue']
+for k in range(2):
+    plt.scatter(X[clusters == k, 0], X[clusters == k, 1], color=colors[k], label=f'Cluster {k+1}')
+plt.scatter(centroids[:, 0], centroids[:, 1], color='black', marker='X', s=200, label='Centroids')
+plt.title('K-Means Clustering (k=2)')
+plt.xlabel('X1')
+plt.ylabel('X2')
+plt.legend()
+plt.grid(True)
+plt.show()
